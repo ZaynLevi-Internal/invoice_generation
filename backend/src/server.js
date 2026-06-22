@@ -249,7 +249,6 @@ app.get('/api/stats', requireAuth, (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
-const path = require('path');
 
 app.use(express.static(path.join(__dirname, '..', 'dist')));
 
