@@ -1,4 +1,4 @@
-const API_BASE = '';
+const API_BASE = 'https://invoicegeneration-production-e627.up.railway.app';
 
 function getToken() {
   return localStorage.getItem('token');
