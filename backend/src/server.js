@@ -14,10 +14,16 @@ const dbDir = path.join(__dirname, '..', 'data');
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
-
 const dbPath = path.join(dbDir, 'abs.db');
 const db = new Database(dbPath);
 
+console.log("DB PATH:", dbPath);
+
+const count = db.prepare(
+  "SELECT COUNT(*) as count FROM invoices"
+).get();
+
+console.log("TOTAL INVOICES:", count.count);
 // Initialize schema
 const schemaPath = path.join(__dirname, '..', 'database', 'schema.sql');
 const schema = fs.readFileSync(schemaPath, 'utf8');
