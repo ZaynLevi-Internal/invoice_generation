@@ -12,9 +12,10 @@ export default function Layout({ children }) {
   };
 
   const nav = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/invoices', icon: FileText, label: 'Invoices' }
-  ];
+  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/invoices', icon: FileText, label: 'Invoices' },
+  { to: '/bulk-upload', icon: FileText, label: 'Bulk Upload' }
+];
 
   return (
     <div className="min-h-screen flex">
