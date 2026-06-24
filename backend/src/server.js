@@ -32,11 +32,17 @@ try {
 
 // Auth middleware
 function requireAuth(req, res, next) {
-  const token = req.headers.authorization;
-  if (!token || token !== 'Bearer admin-token') {
-    return res.status(401).json({ error: 'Unauthorized' });
+  const authHeader = req.headers.authorization;
+  const queryToken = req.query.token;
+
+  if (
+    authHeader === 'Bearer admin-token' ||
+    queryToken === 'admin-token'
+  ) {
+    return next();
   }
-  next();
+
+  return res.status(401).json({ error: 'Unauthorized' });
 }
 
 // Helper: compute totals
