@@ -20,6 +20,9 @@ export default function InvoiceList() {
   console.log("FULL RESPONSE:", data);
   alert(JSON.stringify(data));
   setInvoices(data.invoices || data.data || data);
+  setTimeout(() => {
+  alert("Invoices state: " + data.length);
+}, 1000);
 })
 .catch(err => {
   console.error("ERROR:", err);
