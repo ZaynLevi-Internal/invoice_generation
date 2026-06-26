@@ -18,13 +18,16 @@ export default function BulkUpload() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/invoices/bulk-upload", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        body: formData
-      });
+      const response = await fetch(
+  "https://invoicegeneration-production-e627.up.railway.app/api/invoices/bulk-upload",
+  {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: formData
+  }
+);
 
       const data = await response.json();
 
