@@ -4,7 +4,7 @@ const Database = require('better-sqlite3');
 const ExcelJS = require('exceljs');
 const path = require('path');
 const fs = require('fs');
-
+const multer = require('multer');
 const app = express();
 app.use(cors({
   origin: '*',
@@ -20,7 +20,10 @@ if (!fs.existsSync(dbDir)) {
 }
 const dbPath = path.join(dbDir, 'abs.db');
 const db = new Database(dbPath);
-
+// Upload folder
+const upload = multer({
+  dest: path.join(__dirname, '..', 'uploads')
+});
 // Initialize schema
 const schemaPath = path.join(__dirname, '..', 'database', 'schema.sql');
 const schema = fs.readFileSync(schemaPath, 'utf8');
@@ -203,6 +206,132 @@ app.delete('/api/invoices/:id', requireAuth, (req, res) => {
   res.json({ message: 'Invoice deleted successfully' });
 });
 
+
+// ================= BULK UPLOAD =================
+app.post(
+  '/api/invoices/bulk-upload',
+  requireAuth,
+  upload.single('file'),
+  async (req, res) => {
+
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'No Excel file uploaded'
+      });
+    }
+
+    try {
+
+      const workbook = new ExcelJS.Workbook();
+
+      await workbook.xlsx.readFile(req.file.path);
+
+      const worksheet = workbook.getWorksheet(1);
+
+      let inserted = 0;
+
+      worksheet.eachRow((row, rowNumber) => {
+
+        if (rowNumber === 1) return;
+
+        const data = {
+          customerName: row.getCell(1).value,
+          customerEmail: row.getCell(2).value,
+          customerMobile: String(row.getCell(3).value),
+          sourceLocation: row.getCell(4).value,
+          destinationLocation: row.getCell(5).value,
+          tourPackage: row.getCell(6).value,
+          travelDate: row.getCell(7).value,
+          returnDate: row.getCell(8).value,
+          numberOfPassengers: row.getCell(9).value,
+          baseAmount: row.getCell(10).value,
+          gstRate: row.getCell(11).value || 18,
+          notes: row.getCell(12).value || ''
+        };
+
+        const { gstAmount, totalAmount } =
+          computeTotals(
+            data.baseAmount,
+            data.gstRate,
+            data.numberOfPassengers
+          );
+
+        db.prepare(`
+          INSERT INTO invoices (
+            invoiceNumber,
+            customerName,
+            customerEmail,
+            customerMobile,
+            sourceLocation,
+            destinationLocation,
+            tourPackage,
+            travelDate,
+            returnDate,
+            numberOfPassengers,
+            baseAmount,
+            gstRate,
+            gstAmount,
+            totalAmount,
+            status,
+            notes,
+            createdAt,
+            updatedAt
+          )
+          VALUES(
+            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,
+            'Pending',
+            ?,
+            datetime('now'),
+            datetime('now')
+          )
+        `).run(
+
+          nextInvoiceNumber(),
+
+          data.customerName,
+          data.customerEmail,
+          data.customerMobile,
+          data.sourceLocation,
+          data.destinationLocation,
+          data.tourPackage,
+          data.travelDate,
+          data.returnDate,
+
+          parseInt(data.numberOfPassengers),
+
+          parseFloat(data.baseAmount),
+
+          parseFloat(data.gstRate),
+
+          gstAmount,
+
+          totalAmount,
+
+          data.notes
+        );
+
+        inserted++;
+
+      });
+
+      fs.unlinkSync(req.file.path);
+
+      res.json({
+        message: `${inserted} invoices created successfully`
+      });
+
+    } catch (err) {
+
+      console.error(err);
+
+      res.status(500).json({
+        error: 'Bulk upload failed'
+      });
+
+    }
+
+  }
+);
 // Export to Excel
 app.get('/api/invoices/export/excel', requireAuth, async (req, res) => {
   const invoices = db.prepare('SELECT * FROM invoices ORDER BY createdAt DESC').all();
