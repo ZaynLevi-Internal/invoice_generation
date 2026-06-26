@@ -39,10 +39,15 @@ export const api = {
       body: JSON.stringify({ username, password })
     }),
 
-  getInvoices: (params = {}) => {
-    const qs = new URLSearchParams(params).toString();
-    return request(`/api/invoices?${qs}`);
-  },
+ getInvoices: (params = {}) => {
+  const qs = new URLSearchParams(params).toString();
+
+  alert(
+    `https://invoicegeneration-production-e627.up.railway.app/api/invoices?${qs}`
+  );
+
+  return request(`/api/invoices?${qs}`);
+},
 
   getInvoice: (id) => request(`/api/invoices/${id}`),
 
