@@ -13,8 +13,8 @@ export default function InvoiceList() {
   const fetchInvoices = () => {
     setLoading(true);
     api.getInvoices({
-  search: search || undefined,
-  status: statusFilter || undefined
+  search,
+  status: statusFilter
 })
 .then(data => {
   console.log("FULL RESPONSE:", data);
