@@ -4,11 +4,13 @@ export default function BulkUpload() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleUpload = async () => {
-    if (!file) {
-      alert("Please select an Excel file.");
-      return;
-    }
+const handleUpload = async () => {
+  alert("Button clicked");
+
+  if (!file) {
+    alert("Please select an Excel file.");
+    return;
+  }
 
     const formData = new FormData();
     formData.append("file", file);
