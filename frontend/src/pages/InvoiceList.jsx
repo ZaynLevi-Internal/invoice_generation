@@ -17,8 +17,9 @@ export default function InvoiceList() {
   status: statusFilter || undefined
 })
 .then(data => {
-  console.log("INVOICES:", data);
-  setInvoices(data);
+  console.log("FULL RESPONSE:", data);
+  alert(JSON.stringify(data));
+  setInvoices(data.invoices || data.data || data);
 })
 .catch(err => {
   console.error("ERROR:", err);
