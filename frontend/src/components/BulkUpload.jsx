@@ -18,7 +18,7 @@ export default function BulkUpload() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/bulk-upload", {
+      const response = await fetch("/api/invoices/bulk-upload", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`
