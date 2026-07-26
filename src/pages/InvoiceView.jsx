@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Printer, Download, Trash2, Plane } from "lucide-react";
+import { ArrowLeft, Printer, Download, Trash2, Plane, ShieldAlert } from "lucide-react";
 import { api, formatINR } from "../lib/api";
-import { downloadInvoicePDF } from "../lib/pdfGenerator";
 
 export default function InvoiceView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showAdminMsg, setShowAdminMsg] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -33,7 +33,8 @@ export default function InvoiceView() {
   };
 
   const onDownloadPDF = () => {
-    downloadInvoicePDF(invoice);
+    setShowAdminMsg(true);
+    setTimeout(() => setShowAdminMsg(false), 5000);
   };
 
   return (
@@ -54,6 +55,16 @@ export default function InvoiceView() {
           </button>
         </div>
       </div>
+
+      {showAdminMsg && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+          <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-amber-800">PDF download is restricted</p>
+            <p className="text-xs text-amber-700 mt-1">Please contact your administrator to enable PDF downloads for your account.</p>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl shadow-sm border p-8 sm:p-12 print:shadow-none print:border-0">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 pb-6 border-b">

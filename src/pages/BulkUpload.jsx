@@ -1,10 +1,7 @@
 import { useState, useRef } from "react";
-import { Upload, FileSpreadsheet, Download, Eye, Trash2, CheckCircle, AlertCircle } from "lucide-react";
+import { Upload, FileSpreadsheet, Download, Trash2, CheckCircle, AlertCircle, ShieldAlert } from "lucide-react";
 import * as XLSX from "xlsx";
-import JSZip from "jszip";
-import { saveAs } from "file-saver";
 import { api, computeTotals, formatINR } from "../lib/api";
-import { generateInvoicePDF } from "../lib/pdfGenerator";
 
 export default function BulkUpload() {
   const [rows, setRows] = useState([]);
@@ -12,6 +9,7 @@ export default function BulkUpload() {
   const [processing, setProcessing] = useState(false);
   const [generated, setGenerated] = useState([]);
   const [error, setError] = useState("");
+  const [showAdminMsg, setShowAdminMsg] = useState(false);
   const fileRef = useRef(null);
 
   const handleFileUpload = (e) => {
@@ -47,15 +45,7 @@ export default function BulkUpload() {
     reader.readAsArrayBuffer(file);
   };
 
-  /**
-   * Maps an Excel row to an invoice-compatible object.
-   * Supports the format shown in the screenshot with columns like:
-   * Date, Reference, Vendor, A/C Type, Service, PHR, Description,
-   * Pax/Gust, Base Amount, TCS, Other Taxes, Service, Commission, TDS,
-   * Amount, Bank PG charge, GST, Net Amount, Ledger Balance, Status
-   */
   function mapRowToInvoice(row, idx) {
-    // Flexible column name matching (case-insensitive, partial match)
     const get = (keys) => {
       for (const key of keys) {
         const found = Object.keys(row).find(
@@ -73,19 +63,14 @@ export default function BulkUpload() {
     const sourceLocation = get(["source", "from", "origin"]) || "";
     const destinationLocation = get(["destination", "to", "dest"]) || "";
     const reference = get(["reference", "ref", "invoice"]) || "";
-    const phr = get(["phr"]) || "";
-    const service = get(["service"]) || "";
 
-    // Date parsing
     let travelDate = "";
     const rawDate = get(["date", "travel date", "booking date"]);
     if (rawDate) {
       if (typeof rawDate === "number") {
-        // Excel serial date
         const excelDate = XLSX.SSF.parse_date_code(rawDate);
         travelDate = `${excelDate.y}-${String(excelDate.m).padStart(2, "0")}-${String(excelDate.d).padStart(2, "0")}`;
       } else {
-        // Try parsing string date
         const parsed = new Date(rawDate);
         if (!isNaN(parsed)) {
           travelDate = parsed.toISOString().split("T")[0];
@@ -94,39 +79,35 @@ export default function BulkUpload() {
     }
     if (!travelDate) travelDate = new Date().toISOString().split("T")[0];
 
-    // Numeric fields
     const travelersCount = Math.max(1, parseInt(get(["pax", "gust", "travelers", "guests", "qty"])) || 1);
     const baseAmount = parseFloat(get(["base amount", "base", "amount", "cost", "package cost"])) || 0;
     const gstAmount = parseFloat(get(["gst", "tax"])) || 0;
     const additionalCharges = parseFloat(get(["other taxes", "additional", "tcs", "bank pg"])) || 0;
     const netAmount = parseFloat(get(["net amount", "net", "total", "grand total"])) || 0;
 
-    // Calculate GST percentage from amounts if available
     let gstPercentage = 0;
     const subtotalCalc = baseAmount * travelersCount + additionalCharges;
     if (subtotalCalc > 0 && gstAmount > 0) {
       gstPercentage = Math.round((gstAmount / subtotalCalc) * 100 * 100) / 100;
     } else if (netAmount > 0 && baseAmount > 0 && netAmount > baseAmount) {
-      // Infer GST from net - base
       const inferredGst = netAmount - baseAmount - additionalCharges;
       if (inferredGst > 0) {
         gstPercentage = Math.round((inferredGst / baseAmount) * 100 * 100) / 100;
       }
     }
 
-    // If no gst percentage could be determined, default to 0
     const packageCost = baseAmount || (netAmount > 0 ? netAmount : 0);
 
     return {
       customerName,
       mobile,
       email,
-      packageName: packageName || service || "Travel Service",
+      packageName: packageName || "Travel Service",
       sourceLocation,
       destinationLocation,
       travelDate,
       travelersCount,
-      packageCost: packageCost / travelersCount || packageCost, // per traveler
+      packageCost: packageCost / travelersCount || packageCost,
       gstPercentage,
       additionalCharges,
       reference,
@@ -158,31 +139,9 @@ export default function BulkUpload() {
     }
   };
 
-  const downloadAllPDFs = async () => {
-    if (generated.length === 0) return;
-    setProcessing(true);
-
-    try {
-      if (generated.length === 1) {
-        // Single PDF direct download
-        const doc = generateInvoicePDF(generated[0]);
-        doc.save(`${generated[0].invoiceNumber}.pdf`);
-      } else {
-        // Multiple PDFs — zip them
-        const zip = new JSZip();
-        for (const invoice of generated) {
-          const doc = generateInvoicePDF(invoice);
-          const pdfBlob = doc.output("blob");
-          zip.file(`${invoice.invoiceNumber}.pdf`, pdfBlob);
-        }
-        const zipBlob = await zip.generateAsync({ type: "blob" });
-        saveAs(zipBlob, "BOSS_Travels_Invoices.zip");
-      }
-    } catch (err) {
-      setError("Error generating PDFs: " + err.message);
-    } finally {
-      setProcessing(false);
-    }
+  const handleDownloadClick = () => {
+    setShowAdminMsg(true);
+    setTimeout(() => setShowAdminMsg(false), 5000);
   };
 
   const downloadSampleExcel = () => {
@@ -248,6 +207,16 @@ export default function BulkUpload() {
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
           <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
+
+      {showAdminMsg && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+          <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-amber-800">PDF download is restricted</p>
+            <p className="text-xs text-amber-700 mt-1">Please contact your administrator to enable PDF downloads for your account.</p>
+          </div>
         </div>
       )}
 
@@ -368,16 +337,11 @@ export default function BulkUpload() {
             </div>
             <div className="flex flex-wrap justify-center gap-3 pt-2">
               <button
-                onClick={downloadAllPDFs}
-                disabled={processing}
-                className="inline-flex items-center px-5 py-2.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-60 font-medium"
+                onClick={handleDownloadClick}
+                className="inline-flex items-center px-5 py-2.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 font-medium"
               >
                 <Download className="w-4 h-4 mr-2" />
-                {processing
-                  ? "Generating PDFs..."
-                  : generated.length > 1
-                  ? "Download All PDFs (ZIP)"
-                  : "Download PDF"}
+                {generated.length > 1 ? "Download All PDFs (ZIP)" : "Download PDF"}
               </button>
               <button
                 onClick={() => { setGenerated([]); setFileName(""); }}
@@ -411,10 +375,7 @@ export default function BulkUpload() {
                       <td className="py-3 pr-3 text-right font-medium">{formatINR(inv.grandTotal)}</td>
                       <td className="py-3 text-right">
                         <button
-                          onClick={() => {
-                            const doc = generateInvoicePDF(inv);
-                            doc.save(`${inv.invoiceNumber}.pdf`);
-                          }}
+                          onClick={handleDownloadClick}
                           className="inline-flex items-center px-2 py-1 text-brand-600 hover:bg-brand-50 rounded"
                         >
                           <Download className="w-4 h-4" />
