@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Printer, Download, Trash2, Plane } from "lucide-react";
 import { api, formatINR } from "../lib/api";
+import { downloadInvoicePDF } from "../lib/pdfGenerator";
 
 export default function InvoiceView() {
   const { id } = useParams();
@@ -31,6 +32,10 @@ export default function InvoiceView() {
     navigate("/invoices");
   };
 
+  const onDownloadPDF = () => {
+    downloadInvoicePDF(invoice);
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-4">
       <div className="flex flex-wrap items-center gap-2 no-print">
@@ -41,7 +46,7 @@ export default function InvoiceView() {
           <button onClick={() => window.print()} className="inline-flex items-center px-3 py-2 text-sm border rounded-lg hover:bg-slate-50">
             <Printer className="w-4 h-4 mr-2" /> Print
           </button>
-          <button onClick={() => window.print()} className="inline-flex items-center px-3 py-2 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700">
+          <button onClick={onDownloadPDF} className="inline-flex items-center px-3 py-2 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700">
             <Download className="w-4 h-4 mr-2" /> Download PDF
           </button>
           <button onClick={onDelete} className="inline-flex items-center px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700">
@@ -57,9 +62,9 @@ export default function InvoiceView() {
               <Plane className="w-7 h-7" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">ABS Tours and Travels</h1>
-              <p className="text-sm text-slate-500">Crafting memorable journeys</p>
-              <p className="text-xs text-slate-500 mt-1">123 Travel Street, Bengaluru, India · +91 98765 43210 · contact@abstours.com</p>
+              <h1 className="text-2xl font-bold">BOSS Travels</h1>
+              <p className="text-sm text-slate-500">Your trusted travel partner</p>
+              <p className="text-xs text-slate-500 mt-1">123 Travel Street, Bengaluru, India · +91 98765 43210 · contact@bosstravels.com</p>
             </div>
           </div>
           <div className="text-right">
@@ -121,7 +126,7 @@ export default function InvoiceView() {
         </div>
 
         <div className="mt-12 pt-6 border-t text-center text-xs text-slate-500">
-          Thank you for choosing ABS Tours and Travels. Have a wonderful journey!
+          Thank you for choosing BOSS Travels. Have a wonderful journey!
         </div>
       </div>
     </div>

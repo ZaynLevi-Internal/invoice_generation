@@ -35,7 +35,7 @@ export default function Login() {
           <div className="w-14 h-14 rounded-xl bg-brand-600 text-white flex items-center justify-center mb-3">
             <Plane className="w-7 h-7" />
           </div>
-          <h1 className="text-xl font-bold">ABS Tours and Travels</h1>
+          <h1 className="text-xl font-bold">BOSS Travels</h1>
           <p className="text-sm text-slate-500">Admin Login</p>
         </div>
         <form onSubmit={submit} className="space-y-4">

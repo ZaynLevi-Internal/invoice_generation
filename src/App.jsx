@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import InvoiceList from "./pages/InvoiceList.jsx";
 import InvoiceNew from "./pages/InvoiceNew.jsx";
 import InvoiceView from "./pages/InvoiceView.jsx";
+import BulkUpload from "./pages/BulkUpload.jsx";
 import Layout from "./components/Layout.jsx";
 
 function Private({ children }) {
@@ -26,6 +27,10 @@ export default function App() {
       <Route
         path="/invoices/new"
         element={<Private><Layout><InvoiceNew /></Layout></Private>}
+      />
+      <Route
+        path="/invoices/bulk-upload"
+        element={<Private><Layout><BulkUpload /></Layout></Private>}
       />
       <Route
         path="/invoices/:id"

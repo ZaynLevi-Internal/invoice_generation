@@ -1,12 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { LayoutDashboard, FileText, PlusCircle, LogOut, Plane, Menu, X } from "lucide-react";
+import { LayoutDashboard, FileText, PlusCircle, LogOut, Plane, Menu, X, Upload } from "lucide-react";
 import { auth } from "../lib/api";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/invoices", label: "Invoices", icon: FileText },
   { to: "/invoices/new", label: "New Invoice", icon: PlusCircle },
+  { to: "/invoices/bulk-upload", label: "Bulk Upload", icon: Upload },
 ];
 
 export default function Layout({ children }) {
@@ -35,8 +36,8 @@ export default function Layout({ children }) {
               <Plane className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-bold text-sm leading-tight">ABS Tours</div>
-              <div className="text-xs opacity-70">& Travels</div>
+              <div className="font-bold text-sm leading-tight">BOSS</div>
+              <div className="text-xs opacity-70">Travels</div>
             </div>
           </div>
           <button className="lg:hidden" onClick={() => setOpen(false)}>

@@ -4,8 +4,8 @@
 // Demo credentials: admin / admin123
 // ============================================
 
-const STORAGE_KEY = "abs_invoices";
-const AUTH_KEY = "abs_admin_auth";
+const STORAGE_KEY = "boss_invoices";
+const AUTH_KEY = "boss_admin_auth";
 
 // --- Demo credentials (hardcoded for demo) ---
 const DEMO_USERNAME = "admin";
